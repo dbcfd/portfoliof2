@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>PortfolioF2</title>
+        <script src="http://code.jquery.com/jquery-latest.js"></script>
+		<script src="scripts/f2.js"></script>
+		<script src="scripts/urls.js"></script>
+		<script src="scripts/prices.js"></script>
+		<script src="scripts/quote.js"></script>
+		<script src="scripts/Transaction.js"></script>
+		<script src="scripts/Holding.js"></script>
+		<script type="javascript">
+			$(document).ready(function() {
+				$.ajax({
+					url: PortfolioUrl,
+					dataType: 'json'
+				}).done(function(jsonObj) {
+					var users = '';
+					for(var key in jsonObj) {
+						var port = jsonObj[key];
+						users += '<div><a href="portfolio.html?user=' + port['User'] + '">' + port['User'] + '</a></div>';
+					}
+					if(users.length > 1)  $('#user_list').html(users);
+					else $('#user_list').html('Failed to find users');
+				}).error(function(err) {
+					$('#user_list').html('Error finding users: ' + err);
+				});
+				$('#user_add').click(function() {
+					new Quote($('quote_sym').val()).retrieve(function(err, quote) {
+						if(err) $('quote').html('Error retrieving quote');
+						else $('quote').html(quote.toHtml());
+					} );
+				} );
+		</script>
+    </head>
+    <body>
+		<div id="user_list">Populating users</div>
+		<p>User for Portfolio:<input type="text" id="user_name">name</input><button id="user_add">Add User</button></p>
+    </body>
+</html>
