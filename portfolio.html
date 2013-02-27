@@ -4,22 +4,20 @@
         <title>PortfolioF2</title>
         <script src="http://code.jquery.com/jquery-latest.js"></script>
 		<script src="scripts/f2.js"></script>
+		<script src="scripts/urls.js"></script>
 		<script src="scripts/prices.js"></script>
 		<script src="scripts/quote.js"></script>
 		<script src="scripts/Transaction.js"></script>
 		<script src="scripts/Holding.js"></script>
 		<script type="javascript">
 			$(document).ready(function() {
-				$('#quote_btn').click(function() {
-					new Quote($('quote_sym').val()).retrieve(function(err, quote) {
-						if(err) $('quote').html('Error retrieving quote');
-						else $('quote').html(quote.toHtml());
-					} );
-				} );
+				var user = GetURLParameter('user');
+				if(null === user) {
+				
+				}
 		</script>
     </head>
     <body>
-        <p>Symbol for Quote</p><input type="text" id="quote_sym">GOOG</input><button id="quote_btn">Follow</button><button id="purchase">Purchase</button>
-		<p id="quote">No quote retrieved</p>
+		<div id="portfolio">No portfolio for user</div>
     </body>
 </html>

@@ -26,10 +26,9 @@
 					$('#user_list').html('Error finding users: ' + err);
 				});
 				$('#user_add').click(function() {
-					new Quote($('quote_sym').val()).retrieve(function(err, quote) {
-						if(err) $('quote').html('Error retrieving quote');
-						else $('quote').html(quote.toHtml());
-					} );
+					new Portfolio($('#user_name').val(), 'TestPort', 'TestType', 10000).saveToDb(function(err, port) {
+						$(location).attr('href', 'portfolio.html?user=' + port.user);
+					}
 				} );
 		</script>
     </head>
