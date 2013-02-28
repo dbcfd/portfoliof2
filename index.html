@@ -2,38 +2,49 @@
 <html>
     <head>
         <title>PortfolioF2</title>
-        <script src="http://code.jquery.com/jquery-latest.js"></script>
-		<script src="scripts/f2.js"></script>
-		<script src="scripts/urls.js"></script>
-		<script src="scripts/prices.js"></script>
-		<script src="scripts/quote.js"></script>
-		<script src="scripts/Transaction.js"></script>
-		<script src="scripts/Holding.js"></script>
-		<script type="javascript">
-			$(document).ready(function() {
+        <script src="scripts/jquery-1.9.1.js"></script>
+        <script src="scripts/async.js"></script>
+        <script src="scripts/f2.js"></script>
+        <script src="scripts/urls.js"></script>
+        <script src="scripts/prices.js"></script>
+        <script src="scripts/quote.js"></script>
+        <script src="scripts/Transaction.js"></script>
+        <script src="scripts/Holding.js"></script>
+        <script src="scripts/Portfolio.js"></script>
+        <script src="scripts/utilities.js"></script>
+		<script>
+			$(document).ready(function() {				
 				$.ajax({
-					url: PortfolioUrl,
-					dataType: 'json'
-				}).done(function(jsonObj) {
+					url: 'http://localhost:8080/databases/pf2/indexes/documentsByType?jsonp=?',
+					dataType: 'jsonp',
+					jsonpCallback: 'populateUsers'
+				})
+				.done(function(jsonObj) {
+					var results = jsonObj['Results'];
 					var users = '';
-					for(var key in jsonObj) {
-						var port = jsonObj[key];
+					for(var key in results) {
+						var port = results[key];
 						users += '<div><a href="portfolio.html?user=' + port['User'] + '">' + port['User'] + '</a></div>';
 					}
-					if(users.length > 1)  $('#user_list').html(users);
-					else $('#user_list').html('Failed to find users');
-				}).error(function(err) {
-					$('#user_list').html('Error finding users: ' + err);
-				});
-				$('#user_add').click(function() {
-					new Portfolio($('#user_name').val(), 'TestPort', 'TestType', 10000).saveToDb(function(err, port) {
-						$(location).attr('href', 'portfolio.html?user=' + port.user);
-					}
+					if(users.length > 1) $('#user_list').html(users);
+					else $('#user_list').html('No users found');
+				})
+				.fail(function(xhr, status, thrown) {
+					$('#user_list').html('Error (' + status + '): ' + thrown);
 				} );
+				
+				$('#user_add').click(function() {
+					new Portfolio($('#user_name').val(), 'TestPortfolio', 'Testing', 10000.0).saveToDb(function(err, port) {
+						if(!err) {
+							$(location).attr('href', 'portfolio.html?user=' + port.user);
+						}
+					} );
+				} );
+			} );
 		</script>
     </head>
     <body>
 		<div id="user_list">Populating users</div>
-		<p>User for Portfolio:<input type="text" id="user_name">name</input><button id="user_add">Add User</button></p>
+		<p>User for Portfolio:<input type="text" id="user_name"/><button id="user_add">Add User</button></p>
     </body>
 </html>

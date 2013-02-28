@@ -1,5 +1,5 @@
-var DbUrl = 'http://localhost:8080/docs/pf2';
-var PriceUrl = DbUrl + '/prices';
-var PortfolioUrl = DbUrl + '/portfolios';
-var HoldingUrl = PortfolioUrl + '/holdings';
-var TransactionUrl = HoldingUrl + '/transactions';
+var DbUrl = 'http://localhost:8080/databases/';
+var PriceUrl = DbUrl + 'prices/docs';
+var PortfolioUrl = DbUrl + 'pf2/docs';
+var HoldingUrl = PortfolioUrl;
+var TransactionUrl = HoldingUrl;
