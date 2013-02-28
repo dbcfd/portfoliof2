@@ -2,24 +2,131 @@
 <html>
     <head>
         <title>PortfolioF2</title>
-        <script src="http://code.jquery.com/jquery-latest.js"></script>
+        <script src="scripts/jquery-1.9.1.js"></script>
+		<script src="scripts/async.js"></script>
 		<script src="scripts/f2.js"></script>
+		<script src="scripts/urls.js"></script>
 		<script src="scripts/prices.js"></script>
 		<script src="scripts/quote.js"></script>
 		<script src="scripts/Transaction.js"></script>
 		<script src="scripts/Holding.js"></script>
-		<script type="javascript">
-			$(document).ready(function() {
-				$('#quote_btn').click(function() {
-					new Quote($('quote_sym').val()).retrieve(function(err, quote) {
-						if(err) $('quote').html('Error retrieving quote');
-						else $('quote').html(quote.toHtml());
-					} );
+		<script src="scripts/Portfolio.js"></script>
+		<script src="scripts/utils.js"></script>
+		<script>
+			function updateHolding(index) {
+			
+			}
+			
+			function displayHoldings(portfolio) {
+				port.populateHoldingObjects(function(err, port) {
+					if(err) $('#port_holdings').html('Error populating holdings');
+					else {
+						var holdingHtml = '';
+						for(var holding in port.holdings) {
+							holdingHtml += '<div onclick="updateHolding(' + index +')" id="holding' + idx + '">' + holding.symbol + '</div>';
+						}
+						$('#port_holdings').html(holdingHtml);
+					}
+				} )
+			}
+			
+			function displayPortfolioInformation(portfolio) {
+				async.parallel([
+					function(acb) { portfolio.value(function(err, value) { acb(err, value); } ); },
+					function(acb) { portfolio.gain(function(err, value) { acb(err, value); } ); }
+				], function(err, results) {
+					if(err) $('#port_values').html('Error retrieving value and gain: ' + err);
+					else {
+						var portHtml = '<table>';
+						portHtml += '<tr><th>User</th><th>Name</th><th>Type</th><th>Cash Balance</th><th>Current Worth</th><th>Gain</th></tr>';
+						portHtml += '<tr><td>' + portfolio.user + '</td><td>' + portfolio.name + '</td><td>' + portfolio.type + '</td><td>' + portfolio.cashBalance + '</td><td>' + results[0] + '</td><td>' + results[1] + '</td></tr>'
+						portHtml += '</table>';
+						$('#port_values').html(portHtml);
+					}
+				});
+			}
+			
+			function addTransaction(portfolio, symbol, quantity) {
+				portfolio.populateHoldingObjects(function(err, port) {
+					if(err) $('#messages').html('Failed to purchase ' + symbol);
+					else {
+						var holding = port.getHolding(symbol);
+						if(holding) {
+							holding.addTransaction(new Date(), quantity, function(err, trans) {
+								if(err) $('#messages').html('Purchase failure: ' + JSON.stringify(err));
+								else {
+									port.updateCostBasis(trans, function(err, port) {
+										if(err) $('#messages').html('Purchase failure: ' + JSON.stringify(err));
+										else {
+											displayPortfolioInformation(port);
+											$('#messages').html('Purchase successful');
+										}
+									} );
+								}
+							} );
+						}
+						else {
+							holding = new Holding(symbol, true);
+							holding.addTransaction(new Date(), quantity, function(err, trans) {
+								if(err) $('#messages').html('Purchase failure: ' + JSON.stringify(err));
+								else {
+									port.addHolding(holding, function(err, port) {
+										if(err) $('#messages').html('Purchase failure: ' + JSON.stringify(err));
+										else {
+											displayPortfolioInformation(port);
+											$('#messages').html('Purchase successful');
+										}
+									} );
+								}
+							} )
+						}			
+					}
 				} );
+			}
+			
+			$(document).ready(function() {
+				var portForPage = null;
+				var retrieveAttempted = false;
+				var user = GetURLParameter('user');
+				if(user === null) $('#port_values').html('Cannot retrieve portfolio for null user');
+				else {
+					RetrievePortfolioFromDb(user, function(err, port) {
+						if(err) $('#port_values').html('Error retrieving portfolio for user' + user);
+						else {
+							//setup our click event to display holdings
+							$('#port_holdings').click(function() {
+								displayHoldings(port);
+							} );
+							
+							//setup our add transaction event
+							$('#purchase').click(function() {
+								addTransaction(port, $('#quote_sym').val(), $('#purchase_qty').val());
+							} );
+							
+							//setup quote button
+							$('#quote').click(function() {
+								new Quote($('#quote_sym').val()).retrieve(function(err, qObj) {
+									if(err) $('#quote_result').html('Error: ' + err);
+									else {
+										$('#quote_result').html(qObj.toHtml());
+									}
+								} );
+							} );
+							
+							//define our values
+							displayPortfolioInformation(port);
+						}
+					} );
+				}
+			} );
 		</script>
     </head>
     <body>
-        <p>Symbol for Quote</p><input type="text" id="quote_sym">GOOG</input><button id="quote_btn">Follow</button><button id="purchase">Purchase</button>
-		<p id="quote">No quote retrieved</p>
+		<div id="port_values"></div>
+		<div id="port_holdings">Expand Holdings</div>
+		<hr>
+		<p>Symbol:<input type="text" id="quote_sym" value="GOOG"></input><div style="display:inline;border:1px" id="quote_result"></div><button id="quote">Quote</button></p>
+		<p>Quantity:<input type="text" id="purchase_qty" value="100"></input><button id="purchase">Purchase</button></p>
+		<div id="messages"></div>
     </body>
 </html>

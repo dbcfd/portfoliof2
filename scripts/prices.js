@@ -36,9 +36,11 @@ Prices.prototype = {
 		var pObj = this;
 		var json = toJson();
 		$.ajax({
-			url: PriceUrl + '/' + this.symbol,
+			url: PriceUrl + '/' + this.symbol + '?jsonp=?',
 			data: json,
-			type: 'PUT'
+			type: 'PUT',
+			dataType: 'jsonp',
+			jsonpCallback: 'priceSave'
 		}).done(function() {
 			cb(null, pObj);
 		}).error(function(err) {
@@ -54,9 +56,11 @@ Prices.prototype = {
 		}
 		patchData += ']';
 		$.ajax({
-			url: PriceUrl + '/' + this.symbol,
+			url: PriceUrl + '/' + this.symbol + '?jsonp=?',
 			data: patchData,
-			type: 'PATCH'
+			type: 'PATCH',
+			dataType: 'jsonp',
+			jsonpCallback: 'priceUpdate'
 		}).done(function() {
 			cb(null, pObj);
 		}).error(function(err) {
@@ -84,9 +88,10 @@ Prices.prototype = {
 	retrieveDayValuesFromApi : function(durationInDays, cb) {
 		//run ajax against api
 		$.ajax({
-			url: 'http://dev.markitondemand.com/Api/TimeSeries/json?symbol=' + this.symbol + '&duration=' + durationInDays,
+			url: 'http://dev.markitondemand.com/Api/TimeSeries/jsonp?symbol=' + this.symbol + '&duration=' + durationInDays + '?callback=?',
 			cache: false,
-			dataType: 'json'
+			dataType: 'jsonp',
+			jsonpCallback: 'buildFromApi'
 		}).done(function(jsonObj) {
 			var dayValues = null;
 			var dataObj = jsonObj['Data'];
@@ -114,7 +119,7 @@ Prices.prototype = {
 			}
 			if(null === dayValues) cb(new Error('Failed to find prices for symbol ' + symbol), null);
 			else cb(null, dayValues);
-		}
+		} );
 	},
 	retrieveFromApi : function(durationInDays, cb) {
 		var pObj = this;

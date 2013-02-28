@@ -8,15 +8,17 @@ var Quote = function(symbol) {
 }
 
 Quote.prototype = {
-	retrieve : function() {
+	retrieve : function(cb) {
 		var qObj = this;
 		$.ajax({
-			url: 'http://dev.markitondemand.com/Api/Quote/json?symbol=' + this.symbol;
+			url: 'http://dev.markitondemand.com/Api/Quote/jsonp?symbol=' + this.symbol,
 			cache: false,
-			dataType: 'json'
+			dataType: 'jsonp',
+			jsonp: 'callback',
+			jsonpCallback: 'buildQuote'
 		}).done(function(jsonObj) {
 			var jsonData = jsonObj['Data'];
-			if(!jsonData) cb('Failed to retrieve quote for ' + qObj.symbol);
+			if(!jsonData || null === jsonData) cb('Failed to retrieve quote for ' + qObj.symbol, 0.0);
 			else {
 				qObj.last = jsonData['LastPrice'];
 				qObj.change = jsonData['Change'];
@@ -25,7 +27,9 @@ Quote.prototype = {
 				qObj.volume = jsonData['Volume'];
 				cb(null, qObj);
 			}
-		});
+		}).fail(function(xhr, status, error) {
+			cb(error, null);
+		} );
 	},
 	toHtml : function() {
 		var header = '<tr><th>Last Price</th><th>Time</th><th>Volume</th><th>Change</th><th>Change Percent</th></tr>';
